@@ -1,6 +1,6 @@
 # Portfólio Flaviano
 
-Gerenciador mockado em `/admin`, com edição de conteúdo, prévia e backup JSON. Veja `GERENCIADOR.md` para os recursos e limites de salvamento no navegador.
+Gerenciador em `/admin` com login, prévia, publicação no Supabase, envio de fotos e backup JSON. Veja `GERENCIADOR.md` para configurar o Supabase e usar o painel.
 
 Site em Next.js com App Router, pronto para Vercel. Execute `npm install` e `npm run dev`. Para validar a produção, execute `npm run build`.
 

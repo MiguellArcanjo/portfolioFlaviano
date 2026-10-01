@@ -1,8 +1,6 @@
-# Gerenciador de conteúdo (mock)
+# Gerenciador de conteúdo
 
-Acesse `/admin`. Não há autenticação nem banco nesta demonstração, conforme solicitado. Nenhuma alteração é publicada remotamente.
-
-O site foi reconstruído com abertura laranja, painel de atendimento, seletor interativo de soluções, apresentação pessoal, etapas, FAQ e contato. As configurações continuam controlando o conteúdo. A foto aparece na apresentação pessoal; o painel da abertura utiliza os campos de atendimento. Valores antigos que ainda coincidiam com os textos iniciais são adaptados ao novo design, preservando edições pessoais.
+Acesse `/admin` e entre com e-mail e senha. O conteúdo fica no Supabase: ao clicar em **Publicar**, todos os visitantes passam a ver a nova versão, em qualquer dispositivo.
 
 ## O que pode ser editado
 
@@ -21,23 +19,32 @@ O site foi reconstruído com abertura laranja, painel de atendimento, seletor in
 
 As listas permitem adicionar, remover e reordenar até 30 itens. Uma foto PNG, JPEG ou WebP de até 1 MB pode ser enviada diretamente; também é possível usar uma URL. Textos são renderizados como texto, sem HTML arbitrário.
 
-## Rascunho e salvamento
+## Rascunho e publicação
 
-A prévia recebe as alterações antes de salvar. **Salvar no navegador** grava no `localStorage` deste domínio; abas do site no mesmo navegador recebem as alterações. Recarregar preserva o conteúdo salvo. Outro dispositivo, navegador ou domínio terá configurações independentes. Alterações não salvas geram aviso ao fechar a página.
+A prévia mostra o rascunho enquanto você edita; nada muda para os visitantes até clicar em **Publicar**. Publicar grava no banco e atualiza o site na hora (no máximo em 5 minutos, se a atualização imediata falhar). Alterações não publicadas geram aviso ao sair ou fechar a página. A barra lateral mostra quando foi a última publicação.
 
-Exporte o JSON para backup. Importar e restaurar o conteúdo inicial alteram o rascunho: salve para aplicar ao site. A importação valida estrutura, limites, links, cores e telefone e descarta propriedades desconhecidas.
+Fotos enviadas vão para o Storage do Supabase (bucket `site`, até 3 MB, PNG, JPEG ou WebP); o conteúdo guarda só o endereço da imagem.
 
-O título e a descrição de SEO editados são atualizados no navegador. Enquanto o gerenciador estiver mockado, o HTML inicial e os metadados fornecidos ao buscador continuam usando os valores de `app/layout.js`. A integração com o banco deverá fornecer esses dados ao renderizador do servidor.
+Exporte o JSON para backup. Importar e restaurar o conteúdo inicial alteram o rascunho: publique para aplicar. A importação valida estrutura, limites, links, cores e telefone e descarta propriedades desconhecidas. Se o navegador tiver conteúdo salvo pela versão antiga (sem banco), o gerenciador oferece carregá-lo na prévia.
 
-## Estrutura para a integração futura
+Título e descrição de SEO são lidos no servidor, então buscadores e redes sociais veem o texto publicado.
 
-`app/site-config.js`: valores iniciais, rótulos e validação.
+## Configurar o Supabase (uma vez)
 
-`app/use-site-config.js`: leitura local e comunicação com a prévia. Este é o ponto para substituir `localStorage` por uma API.
+1. Em **Authentication → Users → Add user**, crie o usuário de quem vai editar (e-mail e senha). Em **Authentication → Sign In / Providers**, desative "Allow new users to sign up" para ninguém criar conta sozinho.
+2. Abra `supabase/schema.sql`, troque `TROQUE-PELO-EMAIL@exemplo.com` pelo e-mail desse usuário e execute tudo no **SQL Editor**. O script cria a tabela do conteúdo, a lista de administradores, as regras de acesso (RLS) e o bucket de fotos. Pode ser executado de novo sem perder dados.
+3. Configure as variáveis (veja `.env.example`) no `.env.local` e na Vercel: `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. `SUPABASE_SERVICE_ROLE_KEY` é opcional, fica só no servidor e não é usada pelo site.
+4. Entre em `/admin` e clique em **Publicar** pela primeira vez.
 
-`app/admin/page.js`: edição, importação, exportação e prévia.
+Só e-mails listados em `site_admins` podem publicar ou enviar fotos; ter uma conta no Supabase não basta. Para adicionar alguém, crie o usuário e insira o e-mail nessa tabela.
 
-Antes de habilitar publicação real, adicionar autenticação e autorização no servidor, armazenamento persistente, histórico de alterações e leitura de metadados no servidor. A demonstração não possui um login fictício que possa ser confundido com proteção real.
+## Estrutura
+
+- `app/page.js`: lê o conteúdo publicado no servidor (`app/lib/content-server.js`) e define título e descrição.
+- `app/site.js`: o site em si (interações, formulário, menu).
+- `app/site-config.js`: valores iniciais, rótulos, validação e migração de conteúdo antigo.
+- `app/admin/page.js`: login, edição, prévia, publicação, fotos e backup. `app/admin/actions.js` atualiza o site depois de publicar, só para administradores.
+- `supabase/schema.sql`: estrutura e regras do banco.
 
 ## Verificação
 
