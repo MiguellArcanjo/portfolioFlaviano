@@ -166,9 +166,17 @@ export default function Home() {
  </main>
 
  <footer className="site-footer" id="rodape"><div className="container">
-  <div className="footer-top"><Brand brand={brand}/><p>{footer.description}</p><a className="footer-back" href="#conteudo">{footer.backToTop}</a></div>
-  <div className="footer-wordmark" aria-hidden="true">{brand.name}<span>.</span></div>
-  <div className="footer-links">{footer.links.map((link,i)=><a href={link.href} key={i}>{bare(link.label)}<Arrow/></a>)}</div>
+  {/* A closing invitation instead of a decorative wordmark: the page ends on the next step. */}
+  <div className="footer-cta">
+   <p className="footer-cta-title">{hero.paperTitle} <em>{hero.paperHighlight}</em></p>
+   <a className="cta cta-accent" href={header.contactHref}>{bare(header.contactLabel)}<Arrow/></a>
+  </div>
+  <div className="footer-grid">
+   <div className="footer-about"><Brand brand={brand}/><p>{footer.description}</p>{(profile.company||profile.location)&&<p className="footer-meta">{[profile.company,profile.location].filter(Boolean).join(' · ')}</p>}</div>
+   <nav aria-label="Rodapé"><h2>Navegação</h2>{header.navigation.map((link,i)=><a key={i} href={link.href}>{link.label}</a>)}<a href={header.contactHref}>{bare(header.contactLabel)}</a></nav>
+   {(footer.links.length>0||profile.socialLinks.some(item=>item.label.trim()))&&<div><h2>Links</h2>{[...profile.socialLinks.filter(item=>item.label.trim()),...footer.links].map((link,i)=><a key={i} href={link.href}>{bare(link.label)}<Arrow/></a>)}</div>}
+   <a className="footer-back" href="#conteudo" aria-label={bare(footer.backToTop)}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg></a>
+  </div>
   <div className="footer-bottom"><span>{footer.copyright}</span><p>{footer.legalText}</p></div>
  </div></footer>
  </div>;
