@@ -1,0 +1,7 @@
+node_modules/
+.npm-cache/
+.next/
+.next-dev/
+.vercel/
+.env*
+!.env.example
