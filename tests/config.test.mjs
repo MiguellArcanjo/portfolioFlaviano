@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaults, normalizeConfig, migrateConfig } from '../app/site-config.js';
+import { defaults, normalizeConfig, migrateConfig, normalizePhone } from '../app/site-config.js';
 
 test('configuration export round trips without losing content', () => {
   assert.deepEqual(normalizeConfig(JSON.parse(JSON.stringify(defaults))), defaults);
@@ -46,4 +46,31 @@ test('professional data survives import and old configurations receive empty fac
   assert.equal(normalizeConfig({}).profile.startYear, defaults.profile.startYear);
   config.profile.startYear = 'dez anos';
   assert.throws(() => normalizeConfig(config));
+});
+
+test('new palette replaces the previous default colors but keeps custom ones', () => {
+  const previous = structuredClone(defaults);
+  previous.appearance = { ...previous.appearance, orange: '#f47b42', background: '#ffffff', text: '#232423' };
+  assert.deepEqual(migrateConfig(previous).appearance, defaults.appearance);
+  previous.appearance.orange = '#123456';
+  assert.equal(migrateConfig(previous).appearance.orange, '#123456');
+});
+
+test('WhatsApp numbers accept formatting and get the country code', () => {
+  assert.equal(normalizePhone('(11) 91234-5678'), '5511912345678');
+  assert.equal(normalizePhone('+55 11 91234-5678'), '5511912345678');
+  const config = structuredClone(defaults);
+  config.contact.whatsapp = '(11) 91234-5678';
+  assert.equal(normalizeConfig(config).contact.whatsapp, '5511912345678');
+  config.contact.whatsapp = '1234';
+  assert.throws(() => normalizeConfig(config));
+});
+
+test('the old fictitious number and send button text are replaced', () => {
+  const previous = structuredClone(defaults);
+  previous.contact.whatsapp = '5500000000000';
+  previous.contact.buttonLabel = 'Preparar minha mensagem ↗';
+  const result = migrateConfig(previous);
+  assert.equal(result.contact.whatsapp, '');
+  assert.equal(result.contact.buttonLabel, defaults.contact.buttonLabel);
 });
