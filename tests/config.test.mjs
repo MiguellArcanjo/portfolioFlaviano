@@ -47,3 +47,11 @@ test('professional data survives import and old configurations receive empty fac
   config.profile.startYear = 'dez anos';
   assert.throws(() => normalizeConfig(config));
 });
+
+test('new palette replaces the previous default colors but keeps custom ones', () => {
+  const previous = structuredClone(defaults);
+  previous.appearance = { ...previous.appearance, orange: '#f47b42', background: '#ffffff', text: '#232423' };
+  assert.deepEqual(migrateConfig(previous).appearance, defaults.appearance);
+  previous.appearance.orange = '#123456';
+  assert.equal(migrateConfig(previous).appearance.orange, '#123456');
+});
