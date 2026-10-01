@@ -3,3 +3,5 @@
 .admin-sidebar nav{position:static;border:0;width:auto;background:transparent}.admin-sidebar nav:after{display:none}
 
 .admin-toolbar{position:sticky;top:0;z-index:15;background:#f4f2ee;padding-top:12px}.admin-toolbar .admin-actions{flex-shrink:0}
+.editor-field small.field-error{color:#b3261e}
+.editor-field small a{text-decoration:underline;font-weight:600}

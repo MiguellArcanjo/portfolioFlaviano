@@ -1,6 +1,7 @@
 'use client';
 import { Fragment, useEffect, useState } from 'react';
 import { useSiteConfig } from './use-site-config';
+import { normalizePhone } from './site-config';
 
 const numberLabel = index => String(index + 1).padStart(2, '0');
 function Arrow({ diagonal = true }) {
@@ -21,8 +22,10 @@ export default function Home() {
  const serviceIndex = Math.min(activeService, Math.max(0,solutions.items.length-1));
  const currentService = solutions.items[serviceIndex];
  const selectedInterest = [...solutions.items.map(item=>item.title),contact.otherOption].includes(interest) ? interest : solutions.items[0]?.title || contact.otherOption;
- const phone = contact.whatsapp || processEnvNumber();
+ // The number set in the manager wins; the environment variable is only a fallback.
+ const phone = normalizePhone(contact.whatsapp || processEnvNumber());
  const canWhatsApp = /^[0-9]{12,13}$/.test(phone) && phone !== '5500000000000';
+ const whatsappUrl = text => 'https://wa.me/'+phone+'?text='+encodeURIComponent(text);
  const years = /^\d{4}$/.test(profile.startYear) ? new Date().getFullYear() - Number(profile.startYear) : 0;
  const facts = [[profile.experienceLabel,profile.startYear],[profile.companyLabel,profile.company],[profile.locationLabel,profile.location]].filter(([,value])=>value);
 
@@ -47,7 +50,16 @@ export default function Home() {
  },[appearance.animations,hero.visible,solutions.visible,about.visible,process.visible,faq.visible,contact.visible]);
 
  function startConversation(item){setInterest(item?.title || contact.otherOption);}
- function submit(event){event.preventDefault();const name=new FormData(event.currentTarget).get('name').trim();if(name){setMessage(contact.messageTemplate.replaceAll('{nome}',name).replaceAll('{assunto}',selectedInterest));setCopied(false);setCopyError(false);}}
+ // With a number configured the message goes straight to WhatsApp; otherwise it is shown to be copied.
+ function submit(event){
+  event.preventDefault();
+  const name=new FormData(event.currentTarget).get('name').trim();
+  if(!name) return;
+  const text=contact.messageTemplate.replaceAll('{nome}',name).replaceAll('{assunto}',selectedInterest);
+  setMessage(text);setCopied(false);setCopyError(false);
+  // window.open returns null with 'noopener', so the opener is cut by hand; a blocked pop-up falls back to this tab.
+  if(canWhatsApp){const opened=window.open(whatsappUrl(text),'_blank');if(opened)opened.opener=null;else location.href=whatsappUrl(text);}
+ }
  const photo = about.photo
   ? <img src={about.photo} alt={about.photoAlt} fetchPriority="high"/>
   : <div className="portrait-placeholder"><svg viewBox="0 0 200 230" aria-hidden="true"><circle cx="100" cy="72" r="38"/><path d="M24 224v-29c0-43 34-72 76-72s76 29 76 72v29"/></svg><span>{profile.photoPlaceholder}</span></div>;
@@ -143,11 +155,11 @@ export default function Home() {
   <form className="contact-form" onSubmit={submit} data-reveal>
    <label htmlFor="name">{contact.nameLabel}</label><input id="name" name="name" required maxLength={60} autoComplete="given-name" placeholder={contact.namePlaceholder}/>
    <fieldset className="interest-options"><legend>{contact.interestLabel}</legend>{[...solutions.items.map(item=>item.title),contact.otherOption].map(option=><label key={option}><input type="radio" name="interest" value={option} checked={selectedInterest===option} onChange={()=>setInterest(option)}/><span>{option}</span></label>)}</fieldset>
-   <button className="cta cta-accent" type="submit">{bare(contact.buttonLabel)}<Arrow/></button>
+   <button className="cta cta-accent" type="submit">{canWhatsApp?bare(contact.buttonLabel):'Preparar minha mensagem'}<Arrow/></button>
    <p className="form-note">{contact.footnote}</p>
    {message&&<div className="message-result" aria-live="polite">
-    <div className="chat-bubble"><p>{message}</p><small>{canWhatsApp?'Pronta para enviar':'Prévia da mensagem'}</small></div>
-    {canWhatsApp?<a className="cta cta-accent" href={'https://wa.me/'+phone+'?text='+encodeURIComponent(message)} target="_blank" rel="noopener noreferrer">{bare(contact.whatsappLabel)}<Arrow/></a>:<><button className="copy-button" type="button" onClick={async()=>{try{await navigator.clipboard.writeText(message);setCopied(true);setCopyError(false);}catch{setCopyError(true);}}}>{copied?contact.copiedLabel:contact.copyLabel}</button>{copyError&&<p>{contact.copyError}</p>}<p className="form-note">{contact.missingContact}</p></>}
+    <div className="chat-bubble"><p>{message}</p><small>{canWhatsApp?'Enviada para o WhatsApp':'Prévia da mensagem'}</small></div>
+    {canWhatsApp?<a className="cta cta-accent" href={whatsappUrl(message)} target="_blank" rel="noopener noreferrer">{bare(contact.whatsappLabel)}<Arrow/></a>:<><button className="copy-button" type="button" onClick={async()=>{try{await navigator.clipboard.writeText(message);setCopied(true);setCopyError(false);}catch{setCopyError(true);}}}>{copied?contact.copiedLabel:contact.copyLabel}</button>{copyError&&<p>{contact.copyError}</p>}<p className="form-note">{contact.missingContact}</p></>}
    </div>}
   </form>
  </div></section>}

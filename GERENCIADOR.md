@@ -45,3 +45,6 @@ Antes de habilitar publicação real, adicionar autenticação e autorização n
 
 ## Perfil profissional
 Em Perfil e experiência configure nome, cargo, empresa, região, ano de início, marcos da carreira, certificações e perfis sociais. Campos factuais vazios não aparecem no site. A foto enviada em Sobre e foto é compartilhada com a abertura. O espaço provisório não representa uma pessoa real. Preencha apenas dados confirmados.
+
+## WhatsApp
+Em **Contato e WhatsApp**, preencha o número que recebe as mensagens. Pode digitar com espaços, parênteses ou traço; o 55 do Brasil é incluído automaticamente. O campo mostra para qual número as mensagens irão e um link para testar. Com o número salvo, o botão "Enviar pelo WhatsApp" abre a conversa já com a mensagem pronta. Sem número, o site só prepara a mensagem para copiar. `NEXT_PUBLIC_WHATSAPP_NUMBER` continua valendo como reserva quando o campo está vazio.
